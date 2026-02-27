@@ -5,7 +5,7 @@ on:
       docker_images:
         description: '请填写docker镜像名称 多个用英文逗号分开'
         required: true
-        default: 'alpine:latest,busybox:stable-glibc'  # 设置默认的 Docker 镜像列表
+        default: 'dreamacro/clash:latest'  # 改成Clash官方镜像
 
 jobs:
   pull_and_package:
@@ -19,7 +19,6 @@ jobs:
       run: |
           docker system prune -a -f
           docker volume prune -f
-
     - name: Pull Docker Images and Package
       run: |
         images="${{ github.event.inputs.docker_images }}"
@@ -29,13 +28,11 @@ jobs:
             image_name="${image//\//_}"
             image_name="${image_name//:/_}"
             docker save "${image}" -o "${image_name}-amd64.tar"
-            gzip -c "${image_name}-amd64.tar" > "${image_name}-amd64.tar.gz"
-            rm "${image_name}-amd64.tar"
+            # 删掉gzip压缩命令，保留纯tar包
           done
-
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: my-artifact
-        path: ${{ github.workspace }}/*.tar.gz
-        retention-days: 1  # 将保留天数设置为 1 天 最多可设置90天
+        path: ${{ github.workspace }}/*.tar  # 路径改成.tar，不是.tar.gz
+        retention-days: 7  # 保留7天，足够你下载
